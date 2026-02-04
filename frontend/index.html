@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Task Manager</title>
+</head>
+
+<body>
+
+    <h1>Task Manager</h1>
+
+    <form id="task-form">
+        <input type="text" id="title" placeholder="Título" required />
+        <input type="text" id="description" placeholder="Descripción" />
+        <button type="submit">Crear</button>
+    </form>
+
+    <hr>
+
+    <ul id="task-list"></ul>
+
+    <script>
+        const API_URL = "http://127.0.0.1:8000/tasks/";
+
+        async function loadTasks() {
+            const res = await fetch(API_URL);
+            const tasks = await res.json();
+
+            const list = document.getElementById("task-list");
+            list.innerHTML = "";
+
+            tasks.forEach(task => {
+                const li = document.createElement("li");
+
+                const checkbox = document.createElement("input");
+                checkbox.type = "checkbox";
+                checkbox.checked = task.completed;
+
+                checkbox.onchange = async () => {
+                    await fetch(`${API_URL}/${task.id}`, {
+                        method: "PUT",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            title: task.title,
+                            description: task.description,
+                            completed: checkbox.checked
+                        })
+                    });
+                };
+
+                li.appendChild(checkbox);
+                li.append(` ${task.title}`);
+                list.appendChild(li);
+            });
+        }
+
+        document.getElementById("task-form").onsubmit = async (e) => {
+            e.preventDefault();
+
+            const title = document.getElementById("title").value;
+            const description = document.getElementById("description").value;
+
+            await fetch(API_URL, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ title, description })
+            });
+
+            loadTasks();
+        };
+
+        loadTasks();
+    </script>
+
+</body>
+
+</html>
