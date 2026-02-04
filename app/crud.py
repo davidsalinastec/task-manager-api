@@ -16,8 +16,19 @@ def create_task(db: Session, task: schemas.TaskCreate):
     return db_task
 
 #Obtener todas las tareas
-def get_tasks(db: Session):
-    return db.query(models.Task).all()
+def get_tasks(
+    db: Session,
+    completed: bool | None,
+    limit: int,
+    offset: int
+):
+    query = db.query(models.Task)
+
+    if completed is not None:
+        query = query.filter(models.Task.completed == completed)
+
+    return query.offset(offset).limit(limit).all()
+
 
 
 

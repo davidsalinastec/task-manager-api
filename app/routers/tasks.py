@@ -1,5 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
+from typing import Optional
+from fastapi import Query
+
 
 from .. import crud, schemas
 from ..database import SessionLocal
@@ -24,8 +27,19 @@ def create_task(
     return crud.create_task(db, task)
 
 @router.get("/", response_model=list[schemas.TaskResponse])
-def read_tasks(db: Session = Depends(get_db)):
-    return crud.get_tasks(db)
+def read_tasks(
+    completed: Optional[bool] = Query(None),
+    limit: int = Query(10, ge=1, le=100),
+    offset: int = Query(0, ge=0),
+    db: Session = Depends(get_db)
+):
+    return crud.get_tasks(
+        db=db,
+        completed=completed,
+        limit=limit,
+        offset=offset
+    )
+
 
 @router.get("/{task_id}", response_model=schemas.TaskResponse)
 def read_task_by_id(
@@ -57,6 +71,6 @@ def delete_task(
     if not db_task:
         raise HTTPException(status_code=404, detail="Tarea no encontrada")
     crud.delete_task(db, db_task)
-    return {"message": "Tarea eliminada"}
+    
 
 
